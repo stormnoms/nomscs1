@@ -6,7 +6,6 @@ package chunks
 
 import (
 	"github.com/attic-labs/testify/suite"
-	"fmt"
 )
 
 type BoltStoreTestSuite struct {
@@ -26,7 +25,7 @@ func (suite *BoltStoreTestSuite) TestBoltStorePut() {
 
 	mychunk := suite.Store.Get(h)
 	s := string(mychunk.data)
-	fmt.Println(s)
+	suite.Equal("abc",s)
 
 	//suite.Store.Root()
 	oldRoot := suite.Store.Root()

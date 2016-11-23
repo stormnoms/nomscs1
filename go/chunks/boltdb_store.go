@@ -5,6 +5,7 @@
 package chunks
 
 import (
+	"errors"
 	"fmt"
 	"math"
 	"os"
@@ -16,10 +17,6 @@ import (
 	"github.com/stormasm/noms/go/constants"
 	"github.com/stormasm/noms/go/d"
 	"github.com/stormasm/noms/go/hash"
-	"github.com/syndtr/goleveldb/leveldb"
-	"github.com/syndtr/goleveldb/leveldb/errors"
-	//"github.com/syndtr/goleveldb/leveldb/filter"
-	//"github.com/syndtr/goleveldb/leveldb/opt"
 	"github.com/boltdb/bolt"
 )
 
@@ -39,6 +36,7 @@ type BoltDBStoreFlags struct {
 var (
 	ldbFlagsBolt        = BoltDBStoreFlags{24, false}
 	flagsRegisteredBolt = false
+	ErrNotFound         = errors.New("boltdb: not found")
 )
 
 func RegisterBoltDBFlags(flags *flag.FlagSet) {
@@ -155,7 +153,8 @@ type internalBoltDBStore struct {
 func newBoltDBBackingStore(dir string, dumpStats bool) *internalBoltDBStore {
 	d.PanicIfTrue(dir == "")
 	d.PanicIfError(os.MkdirAll(dir, 0700))
-	db, err := bolt.Open("bolt.db", 0644, nil)
+	filename := dir + "/bolt.db"
+	db, err := bolt.Open(filename, 0644, nil)
 	d.Chk.NoError(err, "opening internalBoltDBStore in %s", dir)
 	return &internalBoltDBStore{
 		db:        db,
@@ -204,7 +203,7 @@ func (l *internalBoltDBStore) getByKey(key []byte, ref hash.Hash) Chunk {
 	//compressed, err := l.db.Get(key, nil)
 	compressed, err := l.viewBolt(key)
 	l.getCount++
-	if err == errors.ErrNotFound {
+	if err == ErrNotFound {
 		return EmptyChunk
 	}
 	d.Chk.NoError(err)
@@ -224,7 +223,7 @@ func (l *internalBoltDBStore) hasByKey(key []byte) bool {
 func (l *internalBoltDBStore) versByKey(key []byte) string {
 	//val, err := l.db.Get(key, nil)
 	val, err := l.viewBolt(key)
-	if err == errors.ErrNotFound {
+	if err == ErrNotFound {
 		return constants.NomsVersion
 	}
 	d.Chk.NoError(err)
@@ -270,10 +269,9 @@ func (l *internalBoltDBStore) viewBolt(key []byte) (val []byte, err error) {
 	})
 
 	if err != nil {
-		return nil, fmt.Errorf("viewBolt error")
+		return nil, ErrNotFound
 	}
 
-	fmt.Println("viewBolt return val = ",string(val))
 	return val, nil
 }
 
@@ -301,15 +299,18 @@ func (l *internalBoltDBStore) putByKey(key []byte, c Chunk) {
 	l.putBytes += int64(len(value))
 }
 
+/*
+I am pretty sure I will not need to implement this...
+
 func (l *internalBoltDBStore) putBatch(b *leveldb.Batch, numBytes int) {
-	/*
 		err := l.db.Write(b, nil)
 		d.Chk.NoError(err)
 		l.putCount += int64(b.Len())
 		l.putBytes += int64(numBytes)
-	*/
+
 	fmt.Println("Currently not yet implemented")
 }
+*/
 
 func (l *internalBoltDBStore) Close() error {
 	l.db.Close()
