@@ -53,6 +53,7 @@ func newBoltDBStore(store *internalBoltDBStore, ns []byte, closeBackingStore boo
 		copy(out[copy(out, ns):], []byte(suffix))
 		return
 	}
+	store.bucketName = ns
 	return &BoltDBStore{
 		internalBoltDBStore: store,
 		rootKey:             copyNsAndAppend(rootKeyConst),
@@ -148,6 +149,7 @@ type internalBoltDBStore struct {
 	mu                                     sync.Mutex
 	getCount, hasCount, putCount, putBytes int64
 	dumpStats                              bool
+	bucketName                             []byte
 }
 
 func newBoltDBBackingStore(dir string, dumpStats bool) *internalBoltDBStore {
@@ -239,9 +241,11 @@ func (l *internalBoltDBStore) setVersByKey(key []byte) {
 }
 
 func (l *internalBoltDBStore) updateBolt(key []byte, value []byte) error {
+
 	// store some data
 	err := l.db.Update(func(tx *bolt.Tx) error {
-		bucket, err := tx.CreateBucketIfNotExists([]byte("sam"))
+		//bucket, err := tx.CreateBucketIfNotExists([]byte("sam"))
+		bucket, err := tx.CreateBucketIfNotExists(l.bucketName)
 		if err != nil {
 			return err
 		}
@@ -258,10 +262,11 @@ func (l *internalBoltDBStore) updateBolt(key []byte, value []byte) error {
 func (l *internalBoltDBStore) viewBolt(key []byte) (val []byte, err error) {
 	// retrieve the data
 	err = l.db.View(func(tx *bolt.Tx) error {
-		bucket := tx.Bucket([]byte("sam"))
+		// bucket := tx.Bucket([]byte("sam"))
+		bucket := tx.Bucket(l.bucketName)
 
 		if bucket == nil {
-			return fmt.Errorf("Bucket sam not found!")
+			return fmt.Errorf("Bucket not found!")
 		}
 
 		val = bucket.Get(key)
