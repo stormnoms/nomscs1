@@ -28,7 +28,7 @@ func (suite *BoltDBStoreBatchTestSuite) SetupTest() {
 	suite.dir, err = ioutil.TempDir("/tmp67", "")
 	suite.NoError(err)
 	suite.factory = NewBoltDBStoreFactory(suite.dir, false)
-	store := suite.factory.CreateStore("name").(*BoltDBStore)
+	store := suite.factory.CreateStore("hbatchb").(*BoltDBStore)
 	suite.putCountFn = func() int {
 		return int(store.putCount)
 	}

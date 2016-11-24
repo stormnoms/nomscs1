@@ -27,7 +27,7 @@ func (suite *BoltDBStoreTestSuite) SetupTest() {
 	suite.dir, err = ioutil.TempDir(os.TempDir(), "")
 	suite.NoError(err)
 	suite.factory = NewBoltDBStoreFactory(suite.dir, false)
-	store := suite.factory.CreateStore("name").(*BoltDBStore)
+	store := suite.factory.CreateStore("htestb").(*BoltDBStore)
 	suite.putCountFn = func() int {
 		return int(store.putCount)
 	}
