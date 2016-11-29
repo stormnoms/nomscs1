@@ -47,6 +47,10 @@ func RegisterBoltDBFlags(flags *flag.FlagSet) {
 	}
 }
 
+func NewBoltDBStoreUseFlags(dir, ns string) *BoltDBStore {
+	return newBoltDBStore(newBoltBackingStore(dir, ldbFlags.dumpStats), []byte(ns), true)
+}
+
 func newBoltDBStore(store *internalBoltDBStore, ns []byte, closeBackingStore bool) *BoltDBStore {
 	copyNsAndAppend := func(suffix string) (out []byte) {
 		out = make([]byte, len(ns)+len(suffix))
@@ -152,7 +156,7 @@ type internalBoltDBStore struct {
 	bucketName                             []byte
 }
 
-func newBoltDBBackingStore(dir string, dumpStats bool) *internalBoltDBStore {
+func newBoltBackingStore(dir string, dumpStats bool) *internalBoltDBStore {
 	d.PanicIfTrue(dir == "")
 	d.PanicIfError(os.MkdirAll(dir, 0700))
 	filename := dir + "/bolt.db"
@@ -330,7 +334,7 @@ func (l *internalBoltDBStore) Close() error {
 }
 
 func NewBoltDBStoreFactory(dir string, dumpStats bool) Factory {
-	return &BoltDBStoreFactory{dir, dumpStats, newBoltDBBackingStore(dir, dumpStats)}
+	return &BoltDBStoreFactory{dir, dumpStats, newBoltBackingStore(dir, dumpStats)}
 }
 
 func NewBoltDBStoreFactoryUseFlags(dir string) Factory {
