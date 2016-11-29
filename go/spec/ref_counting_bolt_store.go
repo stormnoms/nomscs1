@@ -10,13 +10,13 @@ import (
 )
 
 type refCountingBoltStore struct {
-	*chunks.BoltDBStore
+	*chunks.BoltStore
 	refCount int
 	closeFn  func()
 }
 
 func newrefCountingBoltStore(path string, closeFn func()) *refCountingBoltStore {
-	return &refCountingBoltStore{chunks.NewBoltDBStoreUseFlags(path, ""), 1, closeFn}
+	return &refCountingBoltStore{chunks.NewBoltStoreUseFlags(path, ""), 1, closeFn}
 }
 
 func (r *refCountingBoltStore) AddRef() {
@@ -27,7 +27,7 @@ func (r *refCountingBoltStore) Close() (err error) {
 	d.PanicIfFalse(r.refCount > 0)
 	r.refCount--
 	if r.refCount == 0 {
-		err = r.BoltDBStore.Close()
+		err = r.BoltStore.Close()
 		r.closeFn()
 	}
 	return
