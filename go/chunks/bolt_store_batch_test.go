@@ -17,7 +17,7 @@ func TestBoltDBStoreBatchTestSuite(t *testing.T) {
 }
 
 type BoltDBStoreBatchTestSuite struct {
-	BoltStoreBatchTestSuite
+	BoltStoreCommonBatchTestSuite
 	factory Factory
 	dir     string
 }
