@@ -28,13 +28,13 @@ const (
 )
 */
 
-type BoltDBStoreFlags struct {
+type BoltStoreFlags struct {
 	maxFileHandles int
 	dumpStats      bool
 }
 
 var (
-	ldbFlagsBolt        = BoltDBStoreFlags{24, false}
+	ldbFlagsBolt        = BoltStoreFlags{24, false}
 	flagsRegisteredBolt = false
 	ErrNotFound         = errors.New("boltdb: not found")
 )
@@ -47,19 +47,19 @@ func RegisterBoltDBFlags(flags *flag.FlagSet) {
 	}
 }
 
-func NewBoltDBStoreUseFlags(dir, ns string) *BoltDBStore {
-	return newBoltDBStore(newBoltBackingStore(dir, ldbFlags.dumpStats), []byte(ns), true)
+func NewBoltStoreUseFlags(dir, ns string) *BoltStore {
+	return newBoltStore(newBoltBackingStore(dir, ldbFlags.dumpStats), []byte(ns), true)
 }
 
-func newBoltDBStore(store *internalBoltDBStore, ns []byte, closeBackingStore bool) *BoltDBStore {
+func newBoltStore(store *internalBoltStore, ns []byte, closeBackingStore bool) *BoltStore {
 	copyNsAndAppend := func(suffix string) (out []byte) {
 		out = make([]byte, len(ns)+len(suffix))
 		copy(out[copy(out, ns):], []byte(suffix))
 		return
 	}
 	store.bucketName = ns
-	return &BoltDBStore{
-		internalBoltDBStore: store,
+	return &BoltStore{
+		internalBoltStore: store,
 		rootKey:             copyNsAndAppend(rootKeyConst),
 		versionKey:          copyNsAndAppend(versionKeyConst),
 		chunkPrefix:         copyNsAndAppend(chunkPrefixConst),
@@ -67,8 +67,8 @@ func newBoltDBStore(store *internalBoltDBStore, ns []byte, closeBackingStore boo
 	}
 }
 
-type BoltDBStore struct {
-	*internalBoltDBStore
+type BoltStore struct {
+	*internalBoltStore
 	rootKey           []byte
 	versionKey        []byte
 	chunkPrefix       []byte
@@ -76,40 +76,40 @@ type BoltDBStore struct {
 	versionSetOnce    sync.Once
 }
 
-func (l *BoltDBStore) Root() hash.Hash {
-	d.PanicIfFalse(l.internalBoltDBStore != nil)
+func (l *BoltStore) Root() hash.Hash {
+	d.PanicIfFalse(l.internalBoltStore != nil)
 	return l.rootByKey(l.rootKey)
 }
 
-func (l *BoltDBStore) UpdateRoot(current, last hash.Hash) bool {
-	d.PanicIfFalse(l.internalBoltDBStore != nil)
+func (l *BoltStore) UpdateRoot(current, last hash.Hash) bool {
+	d.PanicIfFalse(l.internalBoltStore != nil)
 	l.versionSetOnce.Do(l.setVersIfUnset)
 	return l.updateRootByKey(l.rootKey, current, last)
 }
 
-func (l *BoltDBStore) Get(ref hash.Hash) Chunk {
-	d.PanicIfFalse(l.internalBoltDBStore != nil)
+func (l *BoltStore) Get(ref hash.Hash) Chunk {
+	d.PanicIfFalse(l.internalBoltStore != nil)
 	return l.getByKey(l.toChunkKey(ref), ref)
 }
 
-func (l *BoltDBStore) Has(ref hash.Hash) bool {
-	d.PanicIfFalse(l.internalBoltDBStore != nil)
+func (l *BoltStore) Has(ref hash.Hash) bool {
+	d.PanicIfFalse(l.internalBoltStore != nil)
 	return l.hasByKey(l.toChunkKey(ref))
 }
 
-func (l *BoltDBStore) Version() string {
-	d.PanicIfFalse(l.internalBoltDBStore != nil)
+func (l *BoltStore) Version() string {
+	d.PanicIfFalse(l.internalBoltStore != nil)
 	return l.versByKey(l.versionKey)
 }
 
-func (l *BoltDBStore) Put(c Chunk) {
-	d.PanicIfFalse(l.internalBoltDBStore != nil)
+func (l *BoltStore) Put(c Chunk) {
+	d.PanicIfFalse(l.internalBoltStore != nil)
 	l.versionSetOnce.Do(l.setVersIfUnset)
 	l.putByKey(l.toChunkKey(c.Hash()), c)
 }
 
-func (l *BoltDBStore) PutMany(chunks []Chunk) (e BackpressureError) {
-	d.PanicIfFalse(l.internalBoltDBStore != nil)
+func (l *BoltStore) PutMany(chunks []Chunk) (e BackpressureError) {
+	d.PanicIfFalse(l.internalBoltStore != nil)
 	l.versionSetOnce.Do(l.setVersIfUnset)
 	//numBytes := 0
 	//b := new(leveldb.Batch)
@@ -122,22 +122,22 @@ func (l *BoltDBStore) PutMany(chunks []Chunk) (e BackpressureError) {
 	return
 }
 
-func (l *BoltDBStore) Close() error {
+func (l *BoltStore) Close() error {
 	if l.closeBackingStore {
-		l.internalBoltDBStore.Close()
+		l.internalBoltStore.Close()
 	}
-	l.internalBoltDBStore = nil
+	l.internalBoltStore = nil
 	return nil
 }
 
-func (l *BoltDBStore) toChunkKey(r hash.Hash) []byte {
+func (l *BoltStore) toChunkKey(r hash.Hash) []byte {
 	digest := r.DigestSlice()
 	out := make([]byte, len(l.chunkPrefix), len(l.chunkPrefix)+len(digest))
 	copy(out, l.chunkPrefix)
 	return append(out, digest...)
 }
 
-func (l *BoltDBStore) setVersIfUnset() {
+func (l *BoltStore) setVersIfUnset() {
 	/*
 		exists, err := l.db.Has(l.versionKey, nil)
 		d.Chk.NoError(err)
@@ -148,7 +148,7 @@ func (l *BoltDBStore) setVersIfUnset() {
 	l.setVersByKey(l.versionKey)
 }
 
-type internalBoltDBStore struct {
+type internalBoltStore struct {
 	db                                     *bolt.DB
 	mu                                     sync.Mutex
 	getCount, hasCount, putCount, putBytes int64
@@ -156,19 +156,19 @@ type internalBoltDBStore struct {
 	bucketName                             []byte
 }
 
-func newBoltBackingStore(dir string, dumpStats bool) *internalBoltDBStore {
+func newBoltBackingStore(dir string, dumpStats bool) *internalBoltStore {
 	d.PanicIfTrue(dir == "")
 	d.PanicIfError(os.MkdirAll(dir, 0700))
 	filename := dir + "/bolt.db"
 	db, err := bolt.Open(filename, 0644, nil)
-	d.Chk.NoError(err, "opening internalBoltDBStore in %s", dir)
-	return &internalBoltDBStore{
+	d.Chk.NoError(err, "opening internalBoltStore in %s", dir)
+	return &internalBoltStore{
 		db:        db,
 		dumpStats: dumpStats,
 	}
 }
 
-func (l *internalBoltDBStore) rootByKey(key []byte) hash.Hash {
+func (l *internalBoltStore) rootByKey(key []byte) hash.Hash {
 	// val, err := l.db.Get(key, nil)
 /*
 	val, err := l.viewBolt(key)
@@ -188,7 +188,7 @@ func (l *internalBoltDBStore) rootByKey(key []byte) hash.Hash {
 
 }
 
-func (l *internalBoltDBStore) updateRootByKey(key []byte, current, last hash.Hash) bool {
+func (l *internalBoltStore) updateRootByKey(key []byte, current, last hash.Hash) bool {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	if last != l.rootByKey(key) {
@@ -205,7 +205,7 @@ func (l *internalBoltDBStore) updateRootByKey(key []byte, current, last hash.Has
 	return true
 }
 
-func (l *internalBoltDBStore) getByKey(key []byte, ref hash.Hash) Chunk {
+func (l *internalBoltStore) getByKey(key []byte, ref hash.Hash) Chunk {
 	//compressed, err := l.db.Get(key, nil)
 	compressed, err := l.viewBolt(key)
 	l.getCount++
@@ -218,7 +218,7 @@ func (l *internalBoltDBStore) getByKey(key []byte, ref hash.Hash) Chunk {
 	return NewChunkWithHash(ref, data)
 }
 
-func (l *internalBoltDBStore) hasByKey(key []byte) bool {
+func (l *internalBoltStore) hasByKey(key []byte) bool {
 	// exists, err := l.db.Has(key, &opt.ReadOptions{DontFillCache: true}) // This isn't really a "read", so don't signal the cache to treat it as one.
 	exists, err := l.hasBolt(key)
 	d.Chk.NoError(err)
@@ -226,7 +226,7 @@ func (l *internalBoltDBStore) hasByKey(key []byte) bool {
 	return exists
 }
 
-func (l *internalBoltDBStore) versByKey(key []byte) string {
+func (l *internalBoltStore) versByKey(key []byte) string {
 	//val, err := l.db.Get(key, nil)
 	val, err := l.viewBolt(key)
 	if err == ErrNotFound {
@@ -236,7 +236,7 @@ func (l *internalBoltDBStore) versByKey(key []byte) string {
 	return string(val)
 }
 
-func (l *internalBoltDBStore) setVersByKey(key []byte) {
+func (l *internalBoltStore) setVersByKey(key []byte) {
 	//err := l.db.Put(key, []byte(constants.NomsVersion), nil)
 
 	err := l.updateBolt(key, []byte(constants.NomsVersion))
@@ -244,7 +244,7 @@ func (l *internalBoltDBStore) setVersByKey(key []byte) {
 	d.Chk.NoError(err)
 }
 
-func (l *internalBoltDBStore) updateBolt(key []byte, value []byte) error {
+func (l *internalBoltStore) updateBolt(key []byte, value []byte) error {
 
 	// store some data
 	err := l.db.Update(func(tx *bolt.Tx) error {
@@ -263,7 +263,7 @@ func (l *internalBoltDBStore) updateBolt(key []byte, value []byte) error {
 	return err
 }
 
-func (l *internalBoltDBStore) viewBolt(key []byte) (val []byte, err error) {
+func (l *internalBoltStore) viewBolt(key []byte) (val []byte, err error) {
 	// retrieve the data
 	err = l.db.View(func(tx *bolt.Tx) error {
 		// bucket := tx.Bucket([]byte("sam"))
@@ -284,7 +284,7 @@ func (l *internalBoltDBStore) viewBolt(key []byte) (val []byte, err error) {
 	return val, nil
 }
 
-func (l *internalBoltDBStore) hasBolt(key []byte) (bool, error) {
+func (l *internalBoltStore) hasBolt(key []byte) (bool, error) {
 	val, err := l.viewBolt(key)
 	if err != nil {
 		return false, err
@@ -296,7 +296,7 @@ func (l *internalBoltDBStore) hasBolt(key []byte) (bool, error) {
 	return false, err
 }
 
-func (l *internalBoltDBStore) putByKey(key []byte, c Chunk) {
+func (l *internalBoltStore) putByKey(key []byte, c Chunk) {
 	value := snappy.Encode(nil, c.Data())
 
 	// This was the way with leveldb
@@ -311,7 +311,7 @@ func (l *internalBoltDBStore) putByKey(key []byte, c Chunk) {
 /*
 I am pretty sure I will not need to implement this...
 
-func (l *internalBoltDBStore) putBatch(b *leveldb.Batch, numBytes int) {
+func (l *internalBoltStore) putBatch(b *leveldb.Batch, numBytes int) {
 		err := l.db.Write(b, nil)
 		d.Chk.NoError(err)
 		l.putCount += int64(b.Len())
@@ -321,7 +321,7 @@ func (l *internalBoltDBStore) putBatch(b *leveldb.Batch, numBytes int) {
 }
 */
 
-func (l *internalBoltDBStore) Close() error {
+func (l *internalBoltStore) Close() error {
 	l.db.Close()
 	if l.dumpStats {
 		fmt.Println("--Bolt Stats--")
@@ -333,26 +333,26 @@ func (l *internalBoltDBStore) Close() error {
 	return nil
 }
 
-func NewBoltDBStoreFactory(dir string, dumpStats bool) Factory {
-	return &BoltDBStoreFactory{dir, dumpStats, newBoltBackingStore(dir, dumpStats)}
+func NewBoltStoreFactory(dir string, dumpStats bool) Factory {
+	return &BoltStoreFactory{dir, dumpStats, newBoltBackingStore(dir, dumpStats)}
 }
 
-func NewBoltDBStoreFactoryUseFlags(dir string) Factory {
-	return NewBoltDBStoreFactory(dir, ldbFlagsBolt.dumpStats)
+func NewBoltStoreFactoryUseFlags(dir string) Factory {
+	return NewBoltStoreFactory(dir, ldbFlagsBolt.dumpStats)
 }
 
-type BoltDBStoreFactory struct {
+type BoltStoreFactory struct {
 	dir       string
 	dumpStats bool
-	store     *internalBoltDBStore
+	store     *internalBoltStore
 }
 
-func (f *BoltDBStoreFactory) CreateStore(ns string) ChunkStore {
+func (f *BoltStoreFactory) CreateStore(ns string) ChunkStore {
 	d.PanicIfFalse(f.store != nil)
-	return newBoltDBStore(f.store, []byte(ns), false)
+	return newBoltStore(f.store, []byte(ns), false)
 }
 
-func (f *BoltDBStoreFactory) Shutter() {
+func (f *BoltStoreFactory) Shutter() {
 	f.store.Close()
 	f.store = nil
 }

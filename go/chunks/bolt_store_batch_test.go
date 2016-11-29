@@ -12,23 +12,23 @@ import (
 	"github.com/attic-labs/testify/suite"
 )
 
-func TestBoltDBStoreBatchTestSuite(t *testing.T) {
-	suite.Run(t, &BoltDBStoreBatchTestSuite{})
+func TestBoltStoreBatchTestSuite(t *testing.T) {
+	suite.Run(t, &BoltStoreBatchTestSuite{})
 }
 
-type BoltDBStoreBatchTestSuite struct {
+type BoltStoreBatchTestSuite struct {
 	BoltStoreCommonBatchTestSuite
 	factory Factory
 	dir     string
 }
 
-func (suite *BoltDBStoreBatchTestSuite) SetupTest() {
+func (suite *BoltStoreBatchTestSuite) SetupTest() {
 	var err error
 	//suite.dir, err = ioutil.TempDir(os.TempDir(), "")
 	suite.dir, err = ioutil.TempDir("/tmp67", "")
 	suite.NoError(err)
-	suite.factory = NewBoltDBStoreFactory(suite.dir, false)
-	store := suite.factory.CreateStore("hbatchb").(*BoltDBStore)
+	suite.factory = NewBoltStoreFactory(suite.dir, false)
+	store := suite.factory.CreateStore("hbatchb").(*BoltStore)
 	suite.putCountFn = func() int {
 		return int(store.putCount)
 	}
@@ -36,7 +36,7 @@ func (suite *BoltDBStoreBatchTestSuite) SetupTest() {
 	suite.Store = store
 }
 
-func (suite *BoltDBStoreBatchTestSuite) TearDownTest() {
+func (suite *BoltStoreBatchTestSuite) TearDownTest() {
 	suite.Store.Close()
 	suite.factory.Shutter()
 	//os.Remove(suite.dir)
