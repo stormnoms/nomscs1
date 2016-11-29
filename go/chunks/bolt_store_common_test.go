@@ -8,13 +8,13 @@ import (
 	"github.com/attic-labs/testify/suite"
 )
 
-type BoltStoreTestSuite struct {
+type BoltStoreCommonTestSuite struct {
 	suite.Suite
 	Store      ChunkStore
 	putCountFn func() int
 }
 
-func (suite *BoltStoreTestSuite) TestBoltStorePut() {
+func (suite *BoltStoreCommonTestSuite) TestBoltStorePut() {
 	input := "abc"
 	c := NewChunk([]byte(input))
 	suite.Store.Put(c)
