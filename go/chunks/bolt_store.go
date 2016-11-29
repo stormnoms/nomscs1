@@ -39,7 +39,7 @@ var (
 	ErrNotFound         = errors.New("boltdb: not found")
 )
 
-func RegisterBoltDBFlags(flags *flag.FlagSet) {
+func RegisterBoltFlags(flags *flag.FlagSet) {
 	if !flagsRegisteredBolt {
 		flagsRegisteredBolt = true
 		flags.IntVar(&ldbFlagsBolt.maxFileHandles, "ldb-max-file-handles", 24, "max number of open file handles")
