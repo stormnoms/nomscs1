@@ -157,6 +157,10 @@ func (sp Spec) NewChunkStore() chunks.ChunkStore {
 		return nil
 	case "ldb":
 		return getLdbStore(sp.DatabaseName)
+	case "bolt":
+		return getBoltStore(sp.DatabaseName)
+	case "redis":
+		return getRedisStore(sp.DatabaseName)
 	case "mem":
 		return chunks.NewMemoryStore()
 	}
@@ -246,6 +250,10 @@ func (sp Spec) createDatabase() datas.Database {
 		return datas.NewRemoteDatabase(sp.Href(), sp.Options.Authorization)
 	case "ldb":
 		return datas.NewDatabase(getLdbStore(sp.DatabaseName))
+	case "bolt":
+		return datas.NewDatabase(getBoltStore(sp.DatabaseName))
+	case "redis":
+		return datas.NewDatabase(getRedisStore(sp.DatabaseName))
 	case "mem":
 		return datas.NewDatabase(chunks.NewMemoryStore())
 	}
@@ -274,6 +282,12 @@ func parseDatabaseSpec(spec string) (protocol, name string, err error) {
 
 	switch parts[0] {
 	case "ldb":
+		protocol, name = parts[0], parts[1]
+
+	case "bolt":
+		protocol, name = parts[0], parts[1]
+
+	case "redis":
 		protocol, name = parts[0], parts[1]
 
 	case "http", "https":
