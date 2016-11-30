@@ -248,8 +248,8 @@ func (l *internalBoltStore) updateBolt(key []byte, value []byte) error {
 
 	// store some data
 	err := l.db.Update(func(tx *bolt.Tx) error {
-		bucket, err := tx.CreateBucketIfNotExists([]byte("sam"))
-		//bucket, err := tx.CreateBucketIfNotExists(l.bucketName)
+		//bucket, err := tx.CreateBucketIfNotExists([]byte("sam"))
+		bucket, err := tx.CreateBucketIfNotExists(l.bucketName)
 		if err != nil {
 			return err
 		}
