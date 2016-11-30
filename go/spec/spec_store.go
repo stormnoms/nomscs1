@@ -10,28 +10,33 @@ import (
 	"github.com/stormasm/noms/go/chunks"
 )
 
+var (
+	boltStores = map[string]*refCountingBoltStore{}
+	redisStores = map[string]*refCountingRedisStore{}
+)
+
 func getBoltStore(path string) chunks.ChunkStore {
-	if store, ok := ldbStores[path]; ok {
+	if store, ok := boltStores[path]; ok {
 		store.AddRef()
 		return store
 	}
 
-	store := newRefCountingLdbStore(path, func() {
-		delete(ldbStores, path)
+	store := newRefCountingBoltStore(path, func() {
+		delete(boltStores, path)
 	})
-	ldbStores[path] = store
+	boltStores[path] = store
 	return store
 }
 
 func getRedisStore(path string) chunks.ChunkStore {
-	if store, ok := ldbStores[path]; ok {
+	if store, ok := redisStores[path]; ok {
 		store.AddRef()
 		return store
 	}
 
-	store := newRefCountingLdbStore(path, func() {
-		delete(ldbStores, path)
+	store := newRefCountingRedisStore(path, func() {
+		delete(redisStores, path)
 	})
-	ldbStores[path] = store
+	redisStores[path] = store
 	return store
 }

@@ -10,13 +10,13 @@ import (
 )
 
 type refCountingRedisStore struct {
-	*chunks.LevelDBStore
+	*chunks.RedisStore
 	refCount int
 	closeFn  func()
 }
 
-func newrefCountingRedisStore(path string, closeFn func()) *refCountingRedisStore {
-	return &refCountingRedisStore{chunks.NewLevelDBStoreUseFlags(path, ""), 1, closeFn}
+func newRefCountingRedisStore(path string, closeFn func()) *refCountingRedisStore {
+	return &refCountingRedisStore{chunks.NewRedisStoreUseFlags(path, ""), 1, closeFn}
 }
 
 func (r *refCountingRedisStore) AddRef() {
@@ -27,7 +27,7 @@ func (r *refCountingRedisStore) Close() (err error) {
 	d.PanicIfFalse(r.refCount > 0)
 	r.refCount--
 	if r.refCount == 0 {
-		err = r.LevelDBStore.Close()
+		err = r.RedisStore.Close()
 		r.closeFn()
 	}
 	return
