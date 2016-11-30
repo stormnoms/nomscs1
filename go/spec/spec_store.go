@@ -15,13 +15,13 @@ var (
 	redisStores = map[string]*refCountingRedisStore{}
 )
 
-func getBoltStore(path string) chunks.ChunkStore {
+func getBoltStore(path, bucketname string) chunks.ChunkStore {
 	if store, ok := boltStores[path]; ok {
 		store.AddRef()
 		return store
 	}
 
-	store := newRefCountingBoltStore(path, func() {
+	store := newRefCountingBoltStore(path, bucketname, func() {
 		delete(boltStores, path)
 	})
 	boltStores[path] = store

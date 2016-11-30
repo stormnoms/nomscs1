@@ -15,8 +15,8 @@ type refCountingBoltStore struct {
 	closeFn  func()
 }
 
-func newRefCountingBoltStore(path string, closeFn func()) *refCountingBoltStore {
-	return &refCountingBoltStore{chunks.NewBoltStoreUseFlags(path, "hr"), 1, closeFn}
+func newRefCountingBoltStore(path, ns string, closeFn func()) *refCountingBoltStore {
+	return &refCountingBoltStore{chunks.NewBoltStoreUseFlags(path, ns), 1, closeFn}
 }
 
 func (r *refCountingBoltStore) AddRef() {
