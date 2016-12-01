@@ -277,7 +277,7 @@ func (l *internalBoltStore) viewBolt(key []byte) (val []byte, err error) {
 	}
 
 	s := string(byteary[:n])
-	fmt.Println("Bucket Name = ",n,s)
+	fmt.Println("bolt_store viewBolt bucketName = ",n,s)
 
 	// retrieve the data
 	err = l.db.View(func(tx *bolt.Tx) error {
