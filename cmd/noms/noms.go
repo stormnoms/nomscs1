@@ -44,7 +44,7 @@ var actions = []string{
 
 func usageString() string {
 	i := rand.New(rand.NewSource(time.Now().UnixNano())).Intn(len(actions))
-	return fmt.Sprintf(`Noms is a tool for %s Noms data.`, actions[i])
+	return fmt.Sprintf(`Nomcs is a tool for %s Noms data.`, actions[i])
 }
 
 func main() {
