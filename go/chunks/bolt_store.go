@@ -264,6 +264,21 @@ func (l *internalBoltStore) updateBolt(key []byte, value []byte) error {
 }
 
 func (l *internalBoltStore) viewBolt(key []byte) (val []byte, err error) {
+
+	if l.bucketName == nil {
+		fmt.Println("bolt_store viewBolt bucketName is nil")
+	}
+
+	byteary := l.bucketName
+	n := len(byteary)
+
+	if n < 1 {
+		fmt.Println("bolt_store viewBolt bucketName length is 0")
+	}
+
+	s := string(byteary[:n])
+	fmt.Println("Bucket Name = ",n,s)
+
 	// retrieve the data
 	err = l.db.View(func(tx *bolt.Tx) error {
 		// bucket := tx.Bucket([]byte("sam"))
