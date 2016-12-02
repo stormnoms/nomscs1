@@ -57,6 +57,13 @@ func newBoltStore(store *internalBoltStore, ns []byte, closeBackingStore bool) *
 		copy(out[copy(out, ns):], []byte(suffix))
 		return
 	}
+
+	nslen := len(ns)
+	d.PanicIfTrue(nslen == 0)
+	if nslen < 1 {
+		fmt.Println("bolt_store newBoltStore ns length is 0")
+	}
+
 	store.bucketName = ns
 	return &BoltStore{
 		internalBoltStore: store,
