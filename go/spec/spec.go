@@ -251,7 +251,9 @@ func (sp Spec) createDatabase() datas.Database {
 	case "ldb":
 		return datas.NewDatabase(getLdbStore(sp.DatabaseName))
 	case "bolt":
-		return datas.NewDatabase(getBoltStore(sp.DatabaseName,sp.DatasetName))
+		fmt.Println("spec createDatabase = ",sp.Spec)
+		mysp, _ := ForDataset(sp.Spec)
+		return datas.NewDatabase(getBoltStore(sp.DatabaseName,mysp.DatasetName))
 	case "redis":
 		return datas.NewDatabase(getRedisStore(sp.DatabaseName))
 	case "mem":
