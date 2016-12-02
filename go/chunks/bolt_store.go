@@ -228,6 +228,9 @@ func (l *internalBoltStore) getByKey(key []byte, ref hash.Hash) Chunk {
 func (l *internalBoltStore) hasByKey(key []byte) bool {
 	// exists, err := l.db.Has(key, &opt.ReadOptions{DontFillCache: true}) // This isn't really a "read", so don't signal the cache to treat it as one.
 	exists, err := l.hasBolt(key)
+	if err == ErrNotFound {
+		return false
+	}
 	d.Chk.NoError(err)
 	l.hasCount++
 	return exists
