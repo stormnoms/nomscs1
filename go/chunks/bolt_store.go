@@ -48,6 +48,7 @@ func RegisterBoltFlags(flags *flag.FlagSet) {
 }
 
 func NewBoltStoreUseFlags(dir, ns string) *BoltStore {
+	fmt.Println("bolt_store NewBoltStoreUseFlags")
 	return newBoltStore(newBoltBackingStore(dir, ldbFlags.dumpStats), []byte(ns), true)
 }
 
