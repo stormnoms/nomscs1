@@ -158,7 +158,7 @@ func (sp Spec) NewChunkStore() chunks.ChunkStore {
 	case "ldb":
 		return getLdbStore(sp.DatabaseName)
 	case "bolt":
-		fmt.Println("spec NewChunkStore = ",sp.Spec)
+		fmt.Println("spec NewChunkStore = ", sp.Spec)
 		mysp, _ := ForDataset(sp.Spec)
 		return getBoltStore(sp.DatabaseName, mysp.DatasetName)
 	case "redis":
@@ -253,9 +253,9 @@ func (sp Spec) createDatabase() datas.Database {
 	case "ldb":
 		return datas.NewDatabase(getLdbStore(sp.DatabaseName))
 	case "bolt":
-		fmt.Println("spec createDatabase = ",sp.Spec)
+		fmt.Println("spec createDatabase = ", sp.Spec)
 		mysp, _ := ForDataset(sp.Spec)
-		return datas.NewDatabase(getBoltStore(sp.DatabaseName,mysp.DatasetName))
+		return datas.NewDatabase(getBoltStore(sp.DatabaseName, mysp.DatasetName))
 	case "redis":
 		return datas.NewDatabase(getRedisStore(sp.DatabaseName))
 	case "mem":
