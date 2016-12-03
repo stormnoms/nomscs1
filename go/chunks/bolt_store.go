@@ -11,13 +11,13 @@ import (
 	"os"
 	"sync"
 
+	"github.com/boltdb/bolt"
 	humanize "github.com/dustin/go-humanize"
 	"github.com/golang/snappy"
 	flag "github.com/juju/gnuflag"
 	"github.com/stormasm/noms/go/constants"
 	"github.com/stormasm/noms/go/d"
 	"github.com/stormasm/noms/go/hash"
-	"github.com/boltdb/bolt"
 )
 
 /*
@@ -64,13 +64,14 @@ func newBoltStore(store *internalBoltStore, ns []byte, closeBackingStore bool) *
 		fmt.Println("bolt_store newBoltStore ns length is 0")
 	}
 
+	fmt.Println("bolt_store newBoltStore = ", string(ns[:nslen]))
 	store.bucketName = ns
 	return &BoltStore{
 		internalBoltStore: store,
-		rootKey:             copyNsAndAppend(rootKeyConst),
-		versionKey:          copyNsAndAppend(versionKeyConst),
-		chunkPrefix:         copyNsAndAppend(chunkPrefixConst),
-		closeBackingStore:   closeBackingStore,
+		rootKey:           copyNsAndAppend(rootKeyConst),
+		versionKey:        copyNsAndAppend(versionKeyConst),
+		chunkPrefix:       copyNsAndAppend(chunkPrefixConst),
+		closeBackingStore: closeBackingStore,
 	}
 }
 
@@ -177,12 +178,12 @@ func newBoltBackingStore(dir string, dumpStats bool) *internalBoltStore {
 
 func (l *internalBoltStore) rootByKey(key []byte) hash.Hash {
 	// val, err := l.db.Get(key, nil)
-/*
-	val, err := l.viewBolt(key)
-	fmt.Println("val = ", val)
-	fmt.Println("err = ", err)
-	return hash.Hash{}
-*/
+	/*
+		val, err := l.viewBolt(key)
+		fmt.Println("val = ", val)
+		fmt.Println("err = ", err)
+		return hash.Hash{}
+	*/
 
 	val, err := l.viewBolt(key)
 
@@ -287,7 +288,7 @@ func (l *internalBoltStore) viewBolt(key []byte) (val []byte, err error) {
 	}
 
 	s := string(byteary[:n])
-	fmt.Println("bolt_store viewBolt bucketName = ",n,s)
+	fmt.Println("bolt_store viewBolt bucketName = ", n, s)
 
 	// retrieve the data
 	err = l.db.View(func(tx *bolt.Tx) error {
@@ -374,6 +375,7 @@ type BoltStoreFactory struct {
 
 func (f *BoltStoreFactory) CreateStore(ns string) ChunkStore {
 	d.PanicIfFalse(f.store != nil)
+	fmt.Println("bolt_store CreateStore = ", ns)
 	return newBoltStore(f.store, []byte(ns), false)
 }
 
