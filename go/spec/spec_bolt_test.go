@@ -25,14 +25,29 @@ func TestBoltDatabaseSpec(t *testing.T) {
 		assert.NoError(err)
 		//defer os.RemoveAll(tmpDir)
 
-		s := types.String("corvallis")
+		s1 := types.String("corvallis")
+		s2 := types.String("raton")
+		s3 := types.String("santafe")
 
 		// Existing database in the database are read from the spec.
 		store1 := path.Join(tmpDir, "store1")
+		
 		cs := chunks.NewBoltStoreUseFlags(store1, "ralph")
 		db := datas.NewDatabase(cs)
-		db.WriteValue(s)
+		db.WriteValue(s1)
 		db.Close() // must close immediately to free bolt
+
+		cs = chunks.NewBoltStoreUseFlags(store1, "bill")
+		db = datas.NewDatabase(cs)
+		db.WriteValue(s2)
+		db.Close() // must close immediately to free bolt
+
+		cs = chunks.NewBoltStoreUseFlags(store1, "stu")
+		db = datas.NewDatabase(cs)
+		db.WriteValue(s3)
+		db.Close() // must close immediately to free bolt
+
+
 /*
 		spec1, err := ForDatabase(prefix + store1)
 		assert.NoError(err)
