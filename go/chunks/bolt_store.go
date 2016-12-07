@@ -377,7 +377,7 @@ type BoltStoreFactory struct {
 func (f *BoltStoreFactory) CreateStore(ns string) ChunkStore {
 	d.PanicIfFalse(f.store != nil)
 	fmt.Println("bolt_store CreateStore = ", ns)
-	return newBoltStore(f.store, []byte(ns), false)
+	return newBoltStore(f.store, []byte(ns), true)
 }
 
 func (f *BoltStoreFactory) Shutter() {
